@@ -1,88 +1,45 @@
--- ==========================================
--- 1. SETUP & PATH CORRECTIONS
--- ==========================================
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
 
-local localPlayer = Players.LocalPlayer
-local playerGui = localPlayer:WaitForChild("PlayerGui")
-
--- Find your UI elements inside Core/PlayerGui
--- NOTE: If your ScreenGui has a specific name in Explorer, change "ScreenGui" below to that name!
-local screenGui = playerGui:WaitForChild("ScreenGui") 
-
--- Locate the frames based on your image layout
-local menuFrame = screenGui:WaitForChild("AZC script + -") -- The small top frame
-local targetFrame = screenGui:WaitForChild("TargetFrame") -- The main grey popup frame
-
--- Locate the specific interactive elements
-local openButton = menuFrame:WaitForChild("OpenButton")   -- The "+" button
-local minusButton = menuFrame:WaitForChild("MinusButton") -- The "-" button
-local skyboxButton = targetFrame:WaitForChild("Skybox")    -- The white "Skybox" button
-local killButton = targetFrame:WaitForChild("Kill All Players") -- The white "Kill All Players" button
+        closeTween.Completed:Wait()
+        targetFrame.Visible = false
+    end)
+end
 
 -- ==========================================
--- 2. TWEEN / MENU SLIDING ANIMATION
--- ==========================================
-local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-local openPosition = {Position = UDim2.new(0.5, 0, 0.5, 0)} -- Screen center
-local closePosition = {Position = UDim2.new(0.5, 0, 1.5, 0)} -- Off-screen bottom
-
-local openTween = TweenService:Create(targetFrame, tweenInfo, openPosition)
-local closeTween = TweenService:Create(targetFrame, tweenInfo, closePosition)
-
--- Open Action (+)
-openButton.MouseButton1Click:Connect(function()
-	targetFrame.AnchorPoint = Vector2.new(0.5, 0.5) 
-	targetFrame.Visible = true
-	openTween:Play()
-end)
-
--- Close Action (-)
-minusButton.MouseButton1Click:Connect(function()
-	closeTween:Play()
-	closeTween.Completed:Wait()
-	targetFrame.Visible = false
-end)
-
--- ==========================================
--- 3. BUTTON ACTION: SKYBOX CHANGE
+-- 4. BUTTON CODES: SKYBOX & ELIMINATIONS
 -- ==========================================
 local newSkyboxImage = "rbxassetid://106237155086013" 
 
-skyboxButton.MouseButton1Click:Connect(function()
-	local sky = Lighting:FindFirstChildOfClass("Sky")
-	if not sky then
-		sky = Instance.new("Sky")
-		sky.Parent = Lighting
-	end
+if skyboxButton then
+    skyboxButton.MouseButton1Click:Connect(function()
+        local sky = Lighting:FindFirstChildOfClass("Sky")
+        if not sky then
+            sky = Instance.new("Sky")
+            sky.Parent = Lighting
+        end
+        sky.SkyboxBk = newSkyboxImage
+        sky.SkyboxDn = newSkyboxImage
+        sky.SkyboxFt = newSkyboxImage
+        sky.SkyboxLf = newSkyboxImage
+        sky.SkyboxRt = newSkyboxImage
+        sky.SkyboxUp = newSkyboxImage
+        print("Skybox code ran locally.")
+    end)
+end
 
-	sky.SkyboxBk = newSkyboxImage
-	sky.SkyboxDn = newSkyboxImage
-	sky.SkyboxFt = newSkyboxImage
-	sky.SkyboxLf = newSkyboxImage
-	sky.SkyboxRt = newSkyboxImage
-	sky.SkyboxUp = newSkyboxImage
-	print("Skybox successfully updated locally!")
-end)
-
--- ==========================================
--- 4. BUTTON ACTION: SERVER-BYPASS KILL ALL
--- ==========================================
-killButton.MouseButton1Click:Connect(function()
-	-- Exploiting character network replication since standard health changes are client-locked
-	for _, player in pairs(Players:GetPlayers()) do
-		if player ~= localPlayer and player.Character then
-			local neck = player.Character:FindFirstChild("Neck", true)
-			local root = player.Character:FindFirstChild("HumanoidRootPart")
-			
-			if neck then
-				neck:Destroy() -- Deleting the neck rig breaks the character across the server network
-			elseif root then
-				root.CFrame = CFrame.new(0, -500, 0) -- Teleport fallback into the void
-			end
-		end
-	end
-	print("Kill commands broadcasted.")
-end)
+if killButton then
+    killButton.MouseButton1Click:Connect(function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer and player.Character then
+                local neck = player.Character:FindFirstChild("Neck", true)
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                
+                if neck then
+                    neck:Destroy()
+                elseif root then
+                    root.CFrame = CFrame.new(0, -500, 0) -- Drop target beneath the floor
+                end
+            end
+        end
+        print("Kill logic processed.")
+    end)
+end
