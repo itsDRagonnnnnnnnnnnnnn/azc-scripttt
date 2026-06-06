@@ -1,43 +1,152 @@
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
--- Find your UI directly inside PlayerGui instead of using script.Parent
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 
--- 1. Locate your exact ScreenGui and Frames based on your image layout
--- Replace "ScreenGui" if your main UI folder has a custom name in Roblox Studio!
-local screenGui = playerGui:WaitForChild("ScreenGui") 
-local menuFrame = screenGui:WaitForChild("AZC script + -")
-local targetFrame = screenGui:WaitForChild("AZC SCRIPTS") 
+-- Prevent duplicate UI generation
+if playerGui:FindFirstChild("AZC_SystemGui") then
+    playerGui.AZC_SystemGui:Destroy()
+end
 
--- 2. Locate the buttons inside those frames
-local openButton = menuFrame:WaitForChild("OpenButton")
-local minusButton = menuFrame:WaitForChild("MinusButton")
+-- 1. Create the Master ScreenGui Container
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AZC_SystemGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
 
--- 3. Set up the Animation Speed and Style
+-- 2. Create the Top Control Bar ("AZC script + -")
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "AZC script + -"
+menuFrame.Size = UDim2.new(0, 180, 0, 45)
+menuFrame.Position = UDim2.new(0.5, -90, 0.05, 0)
+menuFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+menuFrame.BorderSizePixel = 0
+menuFrame.Active = true
+menuFrame.Draggable = true
+menuFrame.Parent = screenGui
+
+local menuTitle = Instance.new("TextLabel")
+menuTitle.Size = UDim2.new(0.5, 0, 1, 0)
+menuTitle.BackgroundTransparency = 1
+menuTitle.Text = "AZC script"
+menuTitle.TextColor3 = Color3.fromRGB(200, 40, 40)
+menuTitle.Font = Enum.Font.SourceSansBold
+menuTitle.TextSize = 18
+menuTitle.Parent = menuFrame
+
+local openButton = Instance.new("TextButton")
+openButton.Name = "OpenButton"
+openButton.Size = UDim2.new(0.25, 0, 1, 0)
+openButton.Position = UDim2.new(0.5, 0, 0, 0)
+openButton.BackgroundTransparency = 1
+openButton.Text = "+"
+openButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+openButton.TextSize = 24
+openButton.Parent = menuFrame
+
+local minusButton = Instance.new("TextButton")
+minusButton.Name = "MinusButton"
+minusButton.Size = UDim2.new(0.25, 0, 1, 0)
+minusButton.Position = UDim2.new(0.75, 0, 0, 0)
+minusButton.BackgroundTransparency = 1
+minusButton.Text = "-"
+minusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minusButton.TextSize = 24
+minusButton.Parent = menuFrame
+
+-- 3. Create the Main Window Panel ("AZC SCRIPTS")
+local targetFrame = Instance.new("Frame")
+targetFrame.Name = "AZC SCRIPTS"
+targetFrame.Size = UDim2.new(0, 400, 0, 280)
+targetFrame.Position = UDim2.new(0.5, 0, 1.5, 0) -- Starts hidden off-screen bottom
+targetFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+targetFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+targetFrame.BorderSizePixel = 0
+targetFrame.Visible = false
+targetFrame.Parent = screenGui
+
+local headerBar = Instance.new("Frame")
+headerBar.Size = UDim2.new(1, 0, 0, 35)
+headerBar.BackgroundColor3 = Color3.fromRGB(110, 110, 110)
+headerBar.BorderSizePixel = 0
+headerBar.Parent = targetFrame
+
+local mainTitle = Instance.new("TextLabel")
+mainTitle.Size = UDim2.new(1, 0, 1, 0)
+mainTitle.BackgroundTransparency = 1
+mainTitle.Text = "AZC SCRIPTS"
+mainTitle.TextColor3 = Color3.fromRGB(220, 20, 20)
+mainTitle.Font = Enum.Font.SourceSansBold
+mainTitle.TextSize = 22
+mainTitle.Parent = headerBar
+
+local skyboxButton = Instance.new("TextButton")
+skyboxButton.Name = "Skybox"
+skyboxButton.Size = UDim2.new(0.4, 0, 0, 40)
+skyboxButton.Position = UDim2.new(0.08, 0, 0.25, 0)
+skyboxButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+skyboxButton.Text = "Skybox"
+skyboxButton.TextColor3 = Color3.fromRGB(180, 180, 40)
+skyboxButton.Font = Enum.Font.SourceSansBold
+skyboxButton.TextSize = 24
+skyboxButton.Parent = targetFrame
+
+local killButton = Instance.new("TextButton")
+killButton.Name = "Kill All Players"
+killButton.Size = UDim2.new(0.44, 0, 0, 40)
+killButton.Position = UDim2.new(0.52, 0, 0.25, 0)
+killButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+killButton.Text = "Kill All Players"
+killButton.TextColor3 = Color3.fromRGB(180, 180, 40)
+killButton.Font = Enum.Font.SourceSansBold
+killButton.TextSize = 22
+killButton.Parent = targetFrame
+
+-- 4. Setup Sliding Animations (Tweens)
 local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local openPosition = {Position = UDim2.new(0.5, 0, 0.5, 0)}
+local closePosition = {Position = UDim2.new(0.5, 0, 1.5, 0)}
 
--- 4. Define where the frame should go
-local openPosition = {Position = UDim2.new(0.5, 0, 0.5, 0)} -- Center of the screen
-local closePosition = {Position = UDim2.new(0.5, 0, 1.5, 0)} -- Off-screen (bottom)
-
--- Create the animations (Tweens)
 local openTween = TweenService:Create(targetFrame, tweenInfo, openPosition)
 local closeTween = TweenService:Create(targetFrame, tweenInfo, closePosition)
 
--- 5. Make the + button play the Open animation
 openButton.MouseButton1Click:Connect(function()
-	targetFrame.AnchorPoint = Vector2.new(0.5, 0.5) 
-	targetFrame.Visible = true
-	openTween:Play()
+    targetFrame.Visible = true
+    openTween:Play()
 end)
 
--- 6. Make the - button play the Close animation
 minusButton.MouseButton1Click:Connect(function()
-	closeTween:Play()
+    closeTween:Play()
+    closeTween.Completed:Wait()
+    targetFrame.Visible = false
+end)
 
-	-- Wait for the animation to finish before making it invisible
-	closeTween.Completed:Wait()
-	targetFrame.Visible = false
+-- 5. Button Actions (Skybox & Bypass Kill Mechanics)
+local newSkyboxImage = "rbxassetid://106237155086013" 
+
+skyboxButton.MouseButton1Click:Connect(function()
+    local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
+    sky.Parent = Lighting
+    sky.SkyboxBk = newSkyboxImage
+    sky.SkyboxDn = newSkyboxImage
+    sky.SkyboxFt = newSkyboxImage
+    sky.SkyboxLf = newSkyboxImage
+    sky.SkyboxRt = newSkyboxImage
+    sky.SkyboxUp = newSkyboxImage
+end)
+
+killButton.MouseButton1Click:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            local neck = player.Character:FindFirstChild("Neck", true)
+            local root = player.Character:FindFirstChild("HumanoidRootPart")
+            if neck then
+                neck:Destroy()
+            elseif root then
+                root.CFrame = CFrame.new(0, -500, 0)
+            end
+        end
+    end
 end)
